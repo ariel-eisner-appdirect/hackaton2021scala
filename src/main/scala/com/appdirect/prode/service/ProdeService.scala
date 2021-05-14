@@ -51,7 +51,7 @@ object ProdeService extends ProdeCalculations {
   }
 
   private def simulateDelay(name:String, execute: () => Unit): Unit = {
-    val seconds = random.nextInt(1)
+    val seconds = random.nextInt(3)
     println(s"Waiting $seconds to execute $name")
     Thread.sleep(seconds * 1000L)
     execute()

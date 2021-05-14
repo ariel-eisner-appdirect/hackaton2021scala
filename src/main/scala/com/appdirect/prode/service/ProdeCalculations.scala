@@ -17,25 +17,36 @@ trait ProdeCalculations {
     if (gameWinner == forecastWinner) 1 else 0
 
   def checkBonus(score: Int): Int =
-    score + (if (score == 3) 1 else 0)
+    if (score == 3) 1 else 0
 
-  def calculate(game: Game): Forecast => Score = {
-    val gameWinner = calculateWinner(game)
-
-    val calculations: List[Forecast => Int] = List(
-      forecast => calculateWinnerScore(gameWinner, calculateWinner(forecast.game)),
-      forecast => calculateGoalsScore(game.goalsA, forecast.game.goalsA),
-      forecast => calculateGoalsScore(game.goalsB, forecast.game.goalsB)
-    )
-    forecast => Score(forecast.username, checkBonus(calculations.map(_.apply(forecast)).sum))
+  def calculate(game: Game, calculations: List[(String, Game, Int, Forecast) => Int]): Forecast => Score = {
+    Option(calculateWinner(game))
+      .map(winner => {
+        forecast: Forecast => {
+          var points = 0
+          calculations
+            .foreach(calculator => points += calculator(winner, game, points, forecast))
+          Score(forecast.username, points)
+        }
+      })
+      .getOrElse(forecast => Score(forecast.username))
   }
 
-  def calculateGameWinners(game: Game, forecasts: List[Forecast]): List[Score] = forecasts.map(calculate(game))
+  private def getCalculations: List[(String, Game, Int, Forecast) => Int] = List[(String, Game, Int, Forecast) => Int](
+    (gameWinner, _, _, forecast) => calculateWinnerScore(gameWinner, calculateWinner(forecast.game)),
+    (_, game, _, forecast) => calculateGoalsScore(game.goalsA, forecast.game.goalsA),
+    (_, game, _, forecast) => calculateGoalsScore(game.goalsB, forecast.game.goalsB),
+    (_, _, points, _) => checkBonus(points)
+  )
+
+  def calculateGameWinners(game: Game, forecasts: List[Forecast]): List[Score] = {
+    forecasts.map(calculate(game, getCalculations))
+  }
 
   def calculateWinners(games: List[Game], forecasts: List[Forecast]): List[Score] = {
     games.flatMap(game => calculateGameWinners(game, forecasts.filter(_.game == game)))
       .groupBy(_.username)
-      .map(entry => new Score(entry._1, entry._2.map(_.score).sum))
+      .map(entry => Score(entry._1, entry._2.map(_.score).sum))
       .toList
       .sortBy(_.score)
       .reverse
