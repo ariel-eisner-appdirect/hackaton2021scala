@@ -19,12 +19,12 @@ trait ProdeCalculations {
   def checkBonus(score: Int): Int =
     if (score == 3) 1 else 0
 
-  def calculate(game: Game, calculations: List[(String, Game, Int, Forecast) => Int]): Forecast => Score = {
+  def calculate(game: Game, calculations: () => List[(String, Game, Int, Forecast) => Int]): Forecast => Score = {
     Option(calculateWinner(game))
       .map(winner => {
         forecast: Forecast => {
           var points = 0
-          calculations
+          calculations()
             .foreach(calculator => points += calculator(winner, game, points, forecast))
           Score(forecast.username, points)
         }
@@ -32,7 +32,7 @@ trait ProdeCalculations {
       .getOrElse(forecast => Score(forecast.username))
   }
 
-  private def getCalculations: List[(String, Game, Int, Forecast) => Int] = List[(String, Game, Int, Forecast) => Int](
+  private def getCalculations(): List[(String, Game, Int, Forecast) => Int] = List[(String, Game, Int, Forecast) => Int](
     (gameWinner, _, _, forecast) => calculateWinnerScore(gameWinner, calculateWinner(forecast.game)),
     (_, game, _, forecast) => calculateGoalsScore(game.goalsA, forecast.game.goalsA),
     (_, game, _, forecast) => calculateGoalsScore(game.goalsB, forecast.game.goalsB),
