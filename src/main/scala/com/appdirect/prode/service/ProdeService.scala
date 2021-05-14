@@ -8,7 +8,6 @@ object ProdeService extends ProdeCalculations {
   val forecasts: ListBuffer[Forecast] = ListBuffer()
   val games: ListBuffer[Game] = ListBuffer()
 
-  //
 
   def createGame(game: Game): Future[Game] = create("Create Game", game, games)
 
@@ -33,7 +32,7 @@ object ProdeService extends ProdeCalculations {
     simulateDelay(message, () => {
       Option(collection.indexOf(instance))
         .filter(_ > -1)
-        .foreach(collection.remove)
+        .foreach(collection.remove) /*** MODIFYING IMMUTABLE OBJECTS ***/
 
       collection += instance
 

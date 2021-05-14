@@ -1,6 +1,9 @@
 package com.appdirect.prode
 
 package object service {
+
+  /*** IMMUTABLE CLASSES ***/
+
   case class GameList(data: List[Game])
   case class ForecastList(data: List[Forecast])
   case class ScoreList(data: List[Score])
